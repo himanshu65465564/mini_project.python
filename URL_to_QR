@@ -1,0 +1,92 @@
+# QR Code Generator (Pure Python, ~100 lines)
+# Author: Himanshu
+# Note: This is a simplified QR-like generator, not a full QR spec.
+
+# ------------------------------
+# Step 1: Helper functions
+# ------------------------------
+
+def text_to_bits(text):
+    """Convert text into a string of bits."""
+    bits = ''.join(format(ord(c), '08b') for c in text)
+    return bits
+
+def make_grid(size):
+    """Create an empty square grid of given size."""
+    return [[' ' for _ in range(size)] for _ in range(size)]
+
+def print_grid(grid):
+    """Print the grid as ASCII blocks."""
+    for row in grid:
+        print(''.join(row))
+
+# ------------------------------
+# Step 2: Encode data
+# ------------------------------
+
+def encode_data(url):
+    """Turn URL into binary sequence."""
+    bits = text_to_bits(url)
+    # Repeat bits to fill larger grid
+    while len(bits) < 400:
+        bits += bits
+    return bits
+
+# ------------------------------
+# Step 3: Place data in grid
+# ------------------------------
+
+def fill_grid(bits, size=21):
+    """Fill grid with bits mapped to blocks."""
+    grid = make_grid(size)
+    idx = 0
+    for r in range(size):
+        for c in range(size):
+            if bits[idx % len(bits)] == '1':
+                grid[r][c] = '██'  # black block
+            else:
+                grid[r][c] = '  '  # white space
+            idx += 1
+    return grid
+
+# ------------------------------
+# Step 4: Add finder patterns
+# ------------------------------
+
+def add_finder_patterns(grid):
+    """Add simple square finder patterns in corners."""
+    size = len(grid)
+    def draw_square(x, y, s=5):
+        for r in range(s):
+            for c in range(s):
+                if r in (0, s-1) or c in (0, s-1):
+                    grid[y+r][x+c] = '██'
+                else:
+                    grid[y+r][x+c] = '  '
+    # Top-left
+    draw_square(0, 0)
+    # Top-right
+    draw_square(size-5, 0)
+    # Bottom-left
+    draw_square(0, size-5)
+    return grid
+
+# ------------------------------
+# Step 5: Main function
+# ------------------------------
+
+def generate_qr(url):
+    print("\nGenerating QR-like code for:", url)
+    bits = encode_data(url)
+    grid = fill_grid(bits, size=21)
+    grid = add_finder_patterns(grid)
+    print_grid(grid)
+
+# ------------------------------
+# Step 6: Run program
+# ------------------------------
+
+if __name__ == "__main__":
+    user_url = input("Enter a URL: ")
+    generate_qr(user_url)
+
